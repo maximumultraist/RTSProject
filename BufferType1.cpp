@@ -24,7 +24,6 @@ char BufferType1::read(int planeID)
 
 void BufferType1::write(int planeID, std::pair<int, int> location)
 {
-    std::lock_guard<std::mutex> lock(mtx);
 
     
 }
