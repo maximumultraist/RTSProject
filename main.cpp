@@ -9,7 +9,7 @@
 #include "BufferType1.h"
 #include "BufferType2.h"
 
-int main()
+void testBuffers() //for testing buffers and their functions
 {
     //testing buffertype 1 and making sure both functions work
     BufferType1 bufferA; // creating buffer A
@@ -40,5 +40,10 @@ int main()
 
     std::pair<int,int> pair7 (bufferC.read('X')); //testing bufferType2 read function on X
     std::cout<< "X located at :" << pair7.first << "," << pair7.second << "\n"; //printing just read points
+}
+
+int main()
+{
+    testBuffers();
     return 0;
 }
