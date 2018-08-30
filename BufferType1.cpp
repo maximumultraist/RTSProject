@@ -1,5 +1,6 @@
 #include "BufferType1.h"
 #include <mutex>
+#include <iostream>
 
 BufferType1::BufferType1()
 {
@@ -23,15 +24,6 @@ BufferType1::BufferType1()
         }
     }
     plane3[3][6] = 'Z'; //places initial Z
-}
-
-BufferType1::BufferType1(std::pair<int, int> Xlocation,
-                         std::pair<int, int> Ylocation,
-                         std::pair<int, int> Zlocation)
-{
-    plane1[Xlocation.first][Xlocation.second] = 'X';
-    plane2[Ylocation.first][Ylocation.second] = 'Y';
-    plane3[Zlocation.first][Zlocation.second] = 'Z';
 }
 
 std::pair<int,int> BufferType1::read(char value) //returns coordinates of value passed (X, Y, or Z)
@@ -113,6 +105,30 @@ void BufferType1::write(char value, std::pair<int, int> location)
                 if(i == location.first && j == location.second)
                     plane1[i][j] = 'Z';
             }
+        }
+    }
+}
+
+void BufferType1::print() //for testing purposes
+{
+    for(int i = 0; i < 8; i++){ //printing X coordinates
+        for(int j = 0; j < 7; j++){
+            if(plane1[i][j] != NULL)
+                std::cout << "X coordinates: " << i << "," << j << "\n";
+        }
+    }
+
+    for(int i = 0; i < 8; i++){ //printing Y coordinates
+        for(int j = 0; j < 7; j++){
+            if(plane2[i][j] != NULL)
+                std::cout << "Y coordinates: " << i << "," << j << "\n";
+        }
+    }
+
+    for(int i = 0; i < 8; i++){ //printing Z coordinates
+        for(int j = 0; j < 7; j++){
+            if(plane3[i][j] != NULL)
+                std::cout << "Z coordinates: " << i << "," << j << "\n";
         }
     }
 }
