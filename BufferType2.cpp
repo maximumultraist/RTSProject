@@ -6,7 +6,7 @@ BufferType2::BufferType2() //filling in initial buffer grid
 {
     for(int i = 0; i < 3; i++){
         for(int j = 0; j < 2; j++){
-            array[i][j] = NULL;
+            array[i][j] = '\0';
         }
     }
 }
@@ -24,6 +24,8 @@ std::pair<int,int> BufferType2::read(char value)
     else if(value == 'Z'){ //if wanting coordinates of Z
         return (std::make_pair((int)array[2][0],(int)array[2][1]));
     }
+    std::cout << "Error: invalid value supplied" << std::endl;
+    return std::make_pair(-1,-1);
 }
 
 void BufferType2::write(char value, std::pair<int, int> location)
@@ -52,7 +54,7 @@ void BufferType2::print()
         else if(i == 2)
             std::cout<<"Z ";
         for(int j = 0; j < 2; j++){
-            if(array[i][j] == NULL){
+            if(array[i][j] == '\0'){
                 std::cout << " - ";
             } else{
                 std::cout << " " << array[i][j] << " ";
