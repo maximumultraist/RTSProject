@@ -1,15 +1,15 @@
 #include <iostream>
-#include <cstdlib>
+#include <unistd.h>
 #include <cmath>
-#include <ctime>
 #include <numeric>
 #include <vector>
 #include <mutex>
 #include <thread>
+#include <condition_variable>
 #include "BufferType1.h"
 #include "BufferType2.h"
 
-void testBuffers() //for testing buffers and their functions
+/* void testBuffers() //for testing buffers and their functions
 {
     //testing buffertype 1 and making sure both functions work
     BufferType1 bufferA; // creating buffer A
@@ -40,10 +40,85 @@ void testBuffers() //for testing buffers and their functions
 
     std::pair<int,int> pair7 (bufferC.read('X')); //testing bufferType2 read function on X
     std::cout<< "X located at :" << pair7.first << "," << pair7.second << "\n"; //printing just read points
+} */
+BufferType1 bufferA;
+BufferType1 bufferB;
+BufferType2 bufferC;
+BufferType2 bufferD;
+std::condition_variable gena, genb, reca, recb, deta, detb;
+bool run_gena, run_genb, run_recc, run_recd;
+std::mutex mtxa, mtxb, mtxc, mtxd;
+void freakout();
+
+
+void generate_positions () {
+    for (int i = 1; i < 21; i++) {
+        if (i%2 == 1) {
+            //std::unique_lock<std::mutex> lk1(mtxa);
+            //gena.wait(lk1, []{return run_gena;});
+            std::cout << "Generating Buffer B..." << std::endl;
+            std::pair temp1 = bufferA.read('X');
+            std::pair temp2 = bufferA.read('Y');
+            std::pair temp3 = bufferA.read('Z');
+
+            bufferB.write('X', std::make_pair((temp1.first + 1) % 8, (temp1.second + 1) % 7));
+            bufferB.write('Y', std::make_pair((temp2.first + 1) % 8, 2));
+            bufferB.write('Z', std::make_pair(3, (temp3.second + 1) % 7));
+        }
+        else {
+            //std::unique_lock<std::mutex> lk2(mtxb);
+            std::cout << "Generating Buffer A..." << std::endl;
+            std::pair temp5 = bufferB.read('X');
+            std::pair temp6 = bufferB.read('Y');
+            std::pair temp7 = bufferB.read('Z');
+
+            bufferA.write('X', std::make_pair((temp5.first + 1) % 8, (temp5.second + 1) % 7));
+            bufferA.write('Y', std::make_pair((temp6.first + 1) % 8, 2));
+            bufferA.write('Z', std::make_pair(3, (temp7.second + 1) % 7));
+        }
+    }
 }
 
-int main()
+void record_positions () {
+    for (int i = 1; i < 21; i++) {
+        //add locking logic here, pt 1
+        bufferC.write('X', bufferA.read('X'));
+        bufferC.write('Y', bufferA.read('Y'));
+        bufferC.write('Z', bufferA.read('Z'));
+
+        //add locking logiv here, pt 2
+        bufferD.write('X', bufferB.read('X'));
+        bufferD.write('Y', bufferB.read('Y'));
+        bufferD.write('Z', bufferB.read('Z'));
+    }
+
+}
+
+void detect_collisions () {
+    for (int i = 1; i < 21; i++) {
+
+        // locks again pt 4.
+        if (bufferC.read('X') == bufferC.read('Y'))
+            freakout();
+        if (bufferC.read('X') == bufferC.read('Z'))
+            freakout();
+        if (bufferC.read('Y') == bufferC.read('Z'))
+            freakout();
+
+        // locks again pt. 5
+        if (bufferC.read('X') == bufferC.read('Y'))
+            freakout();
+        if (bufferC.read('X') == bufferC.read('Z'))
+            freakout();
+        if (bufferC.read('Y') == bufferC.read('Z'))
+            freakout();
+    }
+}
+
+int main(void)
 {
-    testBuffers();
+    //std::thread p1(generate_positions);
+    //gena.notify_one();
+
     return 0;
 }
