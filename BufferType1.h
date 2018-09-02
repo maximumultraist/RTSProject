@@ -2,19 +2,20 @@
 #define PROJECT01_BUFFERTYPE1_H
 
 #include <utility>
-#include <mutex>
+#include <unistd.h>
+#include <iostream>
 
 class BufferType1
 {
 public:
     BufferType1();
     std::pair<int,int> read(char value);
-    void write(char value, std::pair<int,int> location);
+    void write(char value, int row, int col);
     void print(); //for testing purposes
 private:
-    char plane1[8][7];
-    char plane2[8][7];
-    char plane3[8][7];
+    std::pair<int, int> planex;
+    std::pair<int, int> planey;
+    std::pair<int, int> planez;
 };
 
 

@@ -3,9 +3,7 @@
 #include <cmath>
 #include <numeric>
 #include <vector>
-#include <mutex>
-#include <thread>
-#include <condition_variable>
+#include <pthread.h>
 #include "BufferType1.h"
 #include "BufferType2.h"
 
@@ -45,10 +43,11 @@ BufferType1 bufferA;
 BufferType1 bufferB;
 BufferType2 bufferC;
 BufferType2 bufferD;
-std::condition_variable gena, genb, reca, recb, deta, detb;
-bool run_gena, run_genb, run_recc, run_recd;
-std::mutex mtxa, mtxb, mtxc, mtxd;
-void freakout();
+pthread_mutex_t mtxa, mtxb, mtxc, mtxd;
+pthread_cond_t genb, gena, reca_c, recb_d, detc, detd;
+void freakout() {
+    std::cout << "COLLISION DETECT!!!11one" << std::endl;
+}
 
 
 void generate_positions () {
@@ -61,9 +60,11 @@ void generate_positions () {
             std::pair temp2 = bufferA.read('Y');
             std::pair temp3 = bufferA.read('Z');
 
-            bufferB.write('X', std::make_pair((temp1.first + 1) % 8, (temp1.second + 1) % 7));
-            bufferB.write('Y', std::make_pair((temp2.first + 1) % 8, 2));
-            bufferB.write('Z', std::make_pair(3, (temp3.second + 1) % 7));
+            bufferB.write('X', (temp1.first + 1) % 8, (temp1.second + 1) % 7);
+            bufferB.write('Y', (temp2.first + 1) % 8, 2);
+            bufferB.write('Z', 3, (temp3.second + 1) % 7);
+            bufferB.print();
+            std::cout << "++++++++++++++++++++++++++++++++++++++++++++++++++\n" << std::endl;
         }
         else {
             //std::unique_lock<std::mutex> lk2(mtxb);
@@ -72,9 +73,11 @@ void generate_positions () {
             std::pair temp6 = bufferB.read('Y');
             std::pair temp7 = bufferB.read('Z');
 
-            bufferA.write('X', std::make_pair((temp5.first + 1) % 8, (temp5.second + 1) % 7));
-            bufferA.write('Y', std::make_pair((temp6.first + 1) % 8, 2));
-            bufferA.write('Z', std::make_pair(3, (temp7.second + 1) % 7));
+            bufferA.write('X', (temp5.first + 1) % 8, (temp5.second + 1) % 7);
+            bufferA.write('Y', (temp6.first + 1) % 8, 2);
+            bufferA.write('Z', 3, (temp7.second + 1) % 7);
+            bufferA.print();
+            std::cout << "---------------------------------------------------\n" << std::endl;
         }
     }
 }
@@ -85,11 +88,15 @@ void record_positions () {
         bufferC.write('X', bufferA.read('X'));
         bufferC.write('Y', bufferA.read('Y'));
         bufferC.write('Z', bufferA.read('Z'));
+        bufferC.print();
+        std::cout << "*********************************************************\n" << std::endl;
 
-        //add locking logiv here, pt 2
+        //add locking logic here, pt 2
         bufferD.write('X', bufferB.read('X'));
         bufferD.write('Y', bufferB.read('Y'));
         bufferD.write('Z', bufferB.read('Z'));
+        bufferD.print();
+        std::cout << "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" << std::endl;
     }
 
 }
@@ -106,19 +113,24 @@ void detect_collisions () {
             freakout();
 
         // locks again pt. 5
-        if (bufferC.read('X') == bufferC.read('Y'))
+        if (bufferD.read('X') == bufferD.read('Y'))
             freakout();
-        if (bufferC.read('X') == bufferC.read('Z'))
+        if (bufferD.read('X') == bufferD.read('Z'))
             freakout();
-        if (bufferC.read('Y') == bufferC.read('Z'))
+        if (bufferD.read('Y') == bufferD.read('Z'))
             freakout();
     }
 }
 
-int main(void)
-{
-    //std::thread p1(generate_positions);
-    //gena.notify_one();
+int main(void) {
+    BufferType1 bufferA;
+    BufferType1 bufferB;
+    BufferType2 bufferC;
+    BufferType2 bufferD;
+    generate_positions();
+    std::cout << "\n AND NOW, FOR THE RECORDS:\n" << std::endl;
+    record_positions();
+    detect_collisions();
 
     return 0;
 }
