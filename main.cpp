@@ -15,32 +15,24 @@ BufferType2 bufferC;
 BufferType2 bufferD;
 std::mutex mtx1,mtx2,mtx3;
 bool collision;
-pthread_mutex_t mtxa, mtxb, mtxc, mtxd;
-pthread_cond_t genb, gena, reca_c, recb_d, detc, detd;
-void freakout(int time) {
-    std::cout << "COLLISION DETECT AT SECOND " << time << std::endl;
-    bufferC.print();
-    bufferD.print();
-}
-
 
 void generate_positions () {
     for (int i = 1; i < 21; i++) {
         if (i%2 == 1) {
-            std::lock_guard<std::mutex> lock(mtx1);
-            std::pair temp1 = bufferA.read('X');
-            std::pair temp2 = bufferA.read('Y');
-            std::pair temp3 = bufferA.read('Z');
+            std::lock_guard<std::mutex> lock(mtx1); // lock buffers
+            auto temp1 = bufferA.read('X'); // logic to generate new positions
+            auto temp2 = bufferA.read('Y');
+            auto temp3 = bufferA.read('Z');
 
             bufferB.write('X', (temp1.first + 1) % 8, (temp1.second + 1) % 7);
             bufferB.write('Y', (temp2.first + 1) % 8, 2);
             bufferB.write('Z', 3, (temp3.second + 1) % 7);
         }
         else {
-            std::lock_guard<std::mutex> lock(mtx1);
-            std::pair temp5 = bufferB.read('X');
-            std::pair temp6 = bufferB.read('Y');
-            std::pair temp7 = bufferB.read('Z');
+            std::lock_guard<std::mutex> lock(mtx1); // lock buffers
+            auto temp5 = bufferB.read('X'); // logic to generate new positions
+            auto temp6 = bufferB.read('Y');
+            auto temp7 = bufferB.read('Z');
 
             bufferA.write('X', (temp5.first + 1) % 8, (temp5.second + 1) % 7);
             bufferA.write('Y', (temp6.first + 1) % 8, 2);
