@@ -23,9 +23,9 @@ std::pair<int,int> BufferType1::read(char value) //returns coordinates of value 
     return std::make_pair(-1,-1);
 }
 
-void BufferType1::write(char value, int row, int col)
+void BufferType1::write(char value, int row, int col) // writes values to selected plane type
 {
-    if ((row <= 7 && col <=6) && (row >= 0 && col >= 0)) {
+    if ((row <= 7 && col <=6) && (row >= 0 && col >= 0)) { // make sure we are in bounds
         if (value == 'X') {
             planex.first = row;
             planex.second = col;

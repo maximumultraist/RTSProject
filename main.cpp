@@ -27,10 +27,10 @@ void reset_locks()
 void generate_positions () {
     for (int i = 1; i < 21; i++) {
         if (i%2 == 1) {
-            std::lock_guard<std::mutex> lock(mtx1);
-            std::pair temp1 = bufferA.read('X');
-            std::pair temp2 = bufferA.read('Y');
-            std::pair temp3 = bufferA.read('Z');
+            std::lock_guard<std::mutex> lock(mtx1); // lock buffers
+            auto temp1 = bufferA.read('X'); // logic to generate new positions
+            auto temp2 = bufferA.read('Y');
+            auto temp3 = bufferA.read('Z');
 
             if(lockX == false)
                 bufferB.write('X', (temp1.first + 1) % 8, (temp1.second + 1) % 7);
@@ -40,10 +40,10 @@ void generate_positions () {
                 bufferB.write('Z', 3, (temp3.second + 1) % 7);
         }
         else {
-            std::lock_guard<std::mutex> lock(mtx1);
-            std::pair temp5 = bufferB.read('X');
-            std::pair temp6 = bufferB.read('Y');
-            std::pair temp7 = bufferB.read('Z');
+            std::lock_guard<std::mutex> lock(mtx1); // lock buffers
+            auto temp5 = bufferB.read('X'); // logic to generate new positions
+            auto temp6 = bufferB.read('Y');
+            auto temp7 = bufferB.read('Z');
 
             if(lockX == false)
                 bufferA.write('X', (temp5.first + 1) % 8, (temp5.second + 1) % 7);

@@ -13,9 +13,9 @@ public:
     void write(char value, int row, int col);
     void print(); //for testing purposes
 private:
-    std::pair<int, int> planex;
-    std::pair<int, int> planey;
-    std::pair<int, int> planez;
+    std::pair<int, int> planex; // Plane X
+    std::pair<int, int> planey; // Plane Y
+    std::pair<int, int> planez; // Plane Z
 };
 
 
