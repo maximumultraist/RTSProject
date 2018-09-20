@@ -13,8 +13,16 @@ BufferType1 bufferA;
 BufferType1 bufferB;
 BufferType2 bufferC;
 BufferType2 bufferD;
-std::mutex mtx1,mtx2,mtx3;
+std::mutex mtx1,mtx2;
 bool collision;
+bool lockX, lockY, lockZ;
+
+void reset_locks()
+{
+    lockX = false;
+    lockY = false;
+    lockZ = false;
+}
 
 void generate_positions () {
     for (int i = 1; i < 21; i++) {
@@ -24,9 +32,12 @@ void generate_positions () {
             auto temp2 = bufferA.read('Y');
             auto temp3 = bufferA.read('Z');
 
-            bufferB.write('X', (temp1.first + 1) % 8, (temp1.second + 1) % 7);
-            bufferB.write('Y', (temp2.first + 1) % 8, 2);
-            bufferB.write('Z', 3, (temp3.second + 1) % 7);
+            if(lockX == false)
+                bufferB.write('X', (temp1.first + 1) % 8, (temp1.second + 1) % 7);
+            if(lockY == false)
+                bufferB.write('Y', (temp2.first + 1) % 8, 2);
+            if(lockZ == false)
+                bufferB.write('Z', 3, (temp3.second + 1) % 7);
         }
         else {
             std::lock_guard<std::mutex> lock(mtx1); // lock buffers
@@ -34,10 +45,14 @@ void generate_positions () {
             auto temp6 = bufferB.read('Y');
             auto temp7 = bufferB.read('Z');
 
-            bufferA.write('X', (temp5.first + 1) % 8, (temp5.second + 1) % 7);
-            bufferA.write('Y', (temp6.first + 1) % 8, 2);
-            bufferA.write('Z', 3, (temp7.second + 1) % 7);
+            if(lockX == false)
+                bufferA.write('X', (temp5.first + 1) % 8, (temp5.second + 1) % 7);
+            if(lockY == false)
+                bufferA.write('Y', (temp6.first + 1) % 8, 2);
+            if(lockZ == false)
+                bufferA.write('Z', 3, (temp7.second + 1) % 7);
         }
+        reset_locks();
         sleep(1);
     }
 }
@@ -56,6 +71,85 @@ void record_positions () {
             bufferD.write('X', bufferB.read('X'));
             bufferD.write('Y', bufferB.read('Y'));
             bufferD.write('Z', bufferB.read('Z'));
+        }
+        sleep(1);
+    }
+}
+
+void avoid_collisions () {
+    for(int i = 2; i < 22; i++) {
+        if(i%2 != 1) {
+            //pulling initial location of values
+            std::pair pairX = bufferC.read('X');
+            std::pair pairY = bufferC.read('Y');
+            std::pair pairZ = bufferC.read('Z');
+
+            //predicting 2 moves ahead
+            for(int i = 0; i < 2; i++) {
+                pairX.first = (pairX.first + 1) % 8;
+                pairX.second = (pairX.second + 1 ) % 7;
+                pairY.first = (pairY.first + 1) % 8;
+                pairZ.second = (pairZ.second + 1) % 7;
+            }
+
+            if(pairX.first == pairY.first && pairX.second == pairY.second) { //if X and Y collide 2 moves ahead
+                if(pairX.first == pairZ.first && pairX.second == pairZ.second) { //if X, Y, and Z all collide 2 moves ahead
+                    lockX = true;
+                    lockY = true;
+                    std::cout<<"Collision predicted and avoided between X,Y,and Z at second "<<i+2<<std::endl;
+                }
+                else{
+                    lockX = true;
+                    std::cout<<"Collision predicted and avoided between X and Y at second "<<i+2<<std::endl;
+                }
+
+            }
+
+            else if(pairX.first == pairZ.first && pairX.second == pairZ.second) { //if X and Z collide 2 moves ahead
+                lockY = true;
+                std::cout<<"Collision predicted and avoided between X and Z at second "<<i+2<<std::endl;
+            }
+
+            else if(pairY.first == pairZ.first && pairY.second == pairZ.second) { //if Y and Z collide 2 moves ahead
+                lockZ = true;
+                std::cout<<"Collision predicted and avoided between Y and Z at second "<<i+2<<std::endl;
+            }
+        }
+        else {
+            //pulling initial location of values
+            std::pair pairX = bufferD.read('X');
+            std::pair pairY = bufferD.read('Y');
+            std::pair pairZ = bufferD.read('Z');
+
+            //predicting 2 moves ahead
+            for(int i = 0; i < 2; i++) {
+                pairX.first = (pairX.first + 1) % 8;
+                pairX.second = (pairX.second + 1 ) % 7;
+                pairY.first = (pairY.first + 1) % 8;
+                pairZ.second = (pairZ.second + 1) % 7;
+            }
+
+            if(pairX.first == pairY.first && pairX.second == pairY.second) { //if X and Y collide 2 moves ahead
+                if(pairY.first == pairZ.first && pairY.second == pairZ.second) { //if X, Y, and Z al collide 2 moves ahead
+                    lockX = true;
+                    lockY = true;
+                    std::cout<<"Collision predicted and avoided between X, Y, and Z at second "<<i+2<<std::endl;
+                }
+                else{
+                    lockX = true;
+                    std::cout<<"Collision predicted and avoided between X and Y at second "<<i+2<<std::endl;
+                }
+            }
+
+            else if(pairX.first == pairZ.first && pairX.second == pairZ.second) { //if X and Z collide 2 moves ahead
+                lockY = true;
+                std::cout<<"Collision predicted and avoided between X and Z at second "<<i+2<<std::endl;
+            }
+
+            else if(pairY.first == pairZ.first && pairY.second == pairZ.second) { //if Y and Z collide 2 moves ahead
+                lockZ = true;
+                std::cout<<"Collision predicted and avoided between Y and Z at second "<<i+2<<std::endl;
+            }
         }
         sleep(1);
     }
@@ -78,7 +172,6 @@ void detect_collisions () {
                           << bufferC.read('X').first << "," << bufferC.read('Z').second << ")\n";
                 collision = true;
             }
-
             if (bufferC.read('Y') == bufferC.read('Z')) {
                 std::cout << "Collision detected with Y and Z at second " << i << " located at ("
                           << bufferC.read('Y').first << "," << bufferC.read('Z').second << ")\n";
@@ -111,16 +204,19 @@ void detect_collisions () {
 }
 
 int main(void) {
+    reset_locks();
     BufferType1 bufferA;
     BufferType1 bufferB;
     BufferType2 bufferC;
     BufferType2 bufferD;
     std::thread p1 (generate_positions);
     std::thread p2 (record_positions);
-    std::thread p3 (detect_collisions);
+    std::thread p3 (avoid_collisions);
+    std::thread p4 (detect_collisions);
     p1.join();
     p2.join();
     p3.join();
+    p4.join();
 
     return 0;
 }
