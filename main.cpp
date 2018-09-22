@@ -55,22 +55,17 @@ void generate_positions () {
                 bufferC.write('Y', temp2);
                 bufferC.write('Z', temp3);
 
-                //printf("Look, Ma, I generate wrote to buffer B & C in round %d!\n", i);
-
                 readyAtoB = false;
                 checkAtoB = true;
                 lock1.unlock();
             }
 
-                if (lockX==false)
-                    bufferB.write('X', x1, x2);
-                if (lockY==false)
-                    bufferB.write('Y', y1, y2);
-                if (lockZ==false)
-                    bufferB.write('Z', z1, z2);
-
-                //bufferB.print();
-                //printf("\n\n");
+            if (lockX==false)
+                bufferB.write('X', x1, x2);
+            if (lockY==false)
+                bufferB.write('Y', y1, y2);
+            if (lockZ==false)
+                bufferB.write('Z', z1, z2);
 
             reset_locks();
             proceed1.notify_all();
@@ -137,20 +132,52 @@ void detect_and_avoid_collisions () {
 
                 if (bufferC.read('X')==bufferC.read('Y')) {
                     std::cout << "Collision detected with X and Y in round " << i << " located at ("
-                              << bufferC.read('X').first << "," << bufferC.read('X').second << ")\n";
+                              << bufferD.read('X').first << "," << bufferD.read('X').second << ")\n";
                     collision = true;
                 }
 
                 if (bufferC.read('X')==bufferC.read('Z')) {
                     std::cout << "Collision detected with X and Z in round " << i << " located at ("
-                              << bufferC.read('X').first << "," << bufferC.read('Z').second << ")\n";
+                              << bufferD.read('X').first << "," << bufferD.read('Z').second << ")\n";
                     collision = true;
                 }
                 if (bufferC.read('Y')==bufferC.read('Z')) {
                     std::cout << "Collision detected with Y and Z in round " << i << " located at ("
-                              << bufferC.read('Y').first << "," << bufferC.read('Z').second << ")\n";
+                              << bufferD.read('Y').first << "," << bufferD.read('Z').second << ")\n";
                     collision = true;
                 }
+
+                auto temp1 = bufferC.read('X'); // logic to generate new positions
+                auto temp2 = bufferC.read('Y');
+                auto temp3 = bufferC.read('Z');
+
+                for (auto k = 0; k < 2; k++) {
+                    temp1.first = (temp1.first+1)%8;
+                    temp1.second = (temp1.second+1)%7;
+                    temp2.first = (temp2.first+1)%8;
+                    temp2.second = 2;
+                    temp3.first = 3;
+                    temp3.second = (temp3.second+1)%7;
+                }
+
+                if (temp1 == temp2) {
+                    lockX = true;
+                    if (temp1 == temp3) {
+                        lockY = true;
+                        std::cout<<"Collision predicted and avoided between X, Y, and Z at second "<<i+2<<std::endl;
+                    }
+                    else
+                        std::cout << "Collision predicted and avoided between X and Y at second " << i+2 << std::endl;
+                }
+                if (temp1 == temp3) {
+                    lockY = true;
+                    std::cout<<"Collision predicted and avoided between X and Z at second "<<i+2<<std::endl;
+                }
+                if (temp2 == temp3) {
+                    lockZ = true;
+                    std::cout<<"Collision predicted and avoided between Y and Z at second "<<i+2<<std::endl;
+                }
+
                 checkAtoB = false;
                 readyAtoB = true;
                 lock.unlock();
@@ -178,6 +205,38 @@ void detect_and_avoid_collisions () {
                               << bufferD.read('Y').first << "," << bufferD.read('Z').second << ")\n";
                     collision = true;
                 }
+
+                auto temp1 = bufferD.read('X');
+                auto temp2 = bufferD.read('Y');
+                auto temp3 = bufferD.read('Z');
+
+                for (auto k = 0; k < 2; k++) {
+                    temp1.first = (temp1.first+1)%8;
+                    temp1.second = (temp1.second+1)%7;
+                    temp2.first = (temp2.first+1)%8;
+                    temp2.second = 2;
+                    temp3.first = 3;
+                    temp3.second = (temp3.second+1)%7;
+                }
+
+                if (temp1 == temp2) {
+                    lockX = true;
+                    if (temp1 == temp3) {
+                        lockY = true;
+                        std::cout<<"Collision predicted and avoided between X, Y, and Z at second "<<i+2<<std::endl;
+                    }
+                    else
+                        std::cout << "Collision predicted and avoided between X and Y at second " << i+2 << std::endl;
+                }
+                if (temp1 == temp3) {
+                    lockY = true;
+                    std::cout<<"Collision predicted and avoided between X and Z at second "<<i+2<<std::endl;
+                }
+                if (temp2 == temp3) {
+                    lockZ = true;
+                    std::cout<<"Collision predicted and avoided between Y and Z at second "<<i+2<<std::endl;
+                }
+
                 checkBtoA = false;
                 readyBtoA = true;
                 lock.unlock();
