@@ -4,8 +4,8 @@
 BufferType2::BufferType2() //filling in initial buffer grid
 {
     log[0] = std::make_pair(0, 0);
-    log[1] = std::make_pair(0, 0);
-    log[2] = std::make_pair(0, 0);
+    log[1] = std::make_pair(0, 2);
+    log[2] = std::make_pair(3, 6);
 }
 
 std::pair<int,int> BufferType2::read(char value)
