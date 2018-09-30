@@ -22,7 +22,6 @@ std::pair<int,int> BufferType2::read(char value)
         return log[2];
     }
     std::cout << "Error: invalid value supplied. Cannot read value \'" << value << "\'" << std::endl;
-    exit(EXIT_FAILURE);
     return std::make_pair(-1,-1);
 }
 

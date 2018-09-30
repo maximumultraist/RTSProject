@@ -36,7 +36,7 @@ void BufferType1::write(char value, int row, int col) // writes values to select
             planez.first = row;
             planez.second = col;
         }
-        //std::cout << "wrote!" << std::endl;
+        // std::cout << "wrote!" << std::endl;
     }
     else {
         std::cout
