@@ -4,7 +4,7 @@
 #include <numeric>
 #include <vector>
 #include <thread>
-#include <shared_mutex>
+#include <mutex>
 #include <condition_variable>
 #include "BufferType1.h"
 #include "BufferType2.h"
@@ -13,8 +13,8 @@ BufferType1 bufferA;
 BufferType1 bufferB;
 BufferType2 bufferC;
 BufferType2 bufferD;
-std::shared_mutex mtx1,mtx2;
-std::condition_variable_any proceed1, proceed2;
+std::mutex mtx1,mtx2;
+std::condition_variable proceed1, proceed2;
 bool collision = false, readyAtoB = true, checkAtoB = false, checkBtoA = true, readyBtoA = false;
 bool lockX, lockY, lockZ;
 
@@ -48,7 +48,7 @@ void generate_positions () {
                 temp3.second = z2;
 
             {
-                std::unique_lock<std::shared_mutex> lock1(mtx1); // lock buffers
+                std::unique_lock<std::mutex> lock1(mtx1); // lock buffers
                 proceed1.wait(lock1, [] { return readyAtoB; });
 
                 bufferC.write('X', temp1);
@@ -61,18 +61,17 @@ void generate_positions () {
             }
             proceed1.notify_all();
 
-            if (lockX==false)
+            if (!lockX)
                 bufferB.write('X', x1, x2);
-            if (lockY==false)
+            if (!lockY)
                 bufferB.write('Y', y1, y2);
-            if (lockZ==false)
+            if (!lockZ)
                 bufferB.write('Z', z1, z2);
 
             // bufferB.print();
             // printf("\n\n");
 
             reset_locks();
-            // proceed1.notify_all();
         }
         else {
             auto temp1 = bufferB.read('X'); // logic to generate new positions
@@ -94,7 +93,7 @@ void generate_positions () {
             temp3.second = z2;
 
             {
-                std::unique_lock<std::shared_mutex> lock2(mtx1); // lock buffers
+                std::unique_lock<std::mutex> lock2(mtx2); // lock buffers
                 proceed1.wait(lock2, [] { return readyAtoB; });
 
                 bufferD.write('X', temp1);
@@ -107,46 +106,46 @@ void generate_positions () {
             }
             proceed2.notify_all();
 
-            if (lockX==false)
+            if (!lockX)
                 bufferA.write('X', x1, x2);
-            if (lockY==false)
+            if (!lockY)
                 bufferA.write('Y', y1, y2);
-            if (lockZ==false)
+            if (!lockZ)
                 bufferA.write('Z', z1, z2);
-            // bufferA.print();
 
+            // bufferA.print();
             // printf("\n\n");
 
             reset_locks();
-            // proceed2.notify_all();
+
         }
-        usleep(100);
+        usleep(10);
     }
 }
 
 void detect_and_avoid_collisions () {
-    usleep(100);
+    usleep(10);
     for (auto i = 1; i < 21; i++) {
         collision = false;
         if (i%2 == 0) {
             {
-                std::shared_lock<std::shared_mutex> lock(mtx1);
+                std::unique_lock<std::mutex> lock(mtx1);
                 proceed1.wait(lock, []{return checkAtoB;});
 
-                if (bufferC.read('X')==bufferC.read('Y')) {
+                if (bufferB.read('X')==bufferB.read('Y')) {
                     std::cout << "Collision detected with X and Y in round " << i << " located at ("
-                              << bufferC.read('X').first << "," << bufferC.read('X').second << ")\n";
+                             << bufferB.read('X').first << "," << bufferB.read('X').second << ")\n";
                     collision = true;
                 }
 
-                if (bufferC.read('X')==bufferC.read('Z')) {
+                if (bufferB.read('X')==bufferB.read('Z')) {
                     std::cout << "Collision detected with X and Z in round " << i << " located at ("
-                              << bufferC.read('X').first << "," << bufferC.read('Z').second << ")\n";
+                             << bufferB.read('X').first << "," << bufferB.read('Z').second << ")\n";
                     collision = true;
                 }
-                if (bufferC.read('Y')==bufferC.read('Z')) {
+                if (bufferB.read('Y')==bufferB.read('Z')) {
                     std::cout << "Collision detected with Y and Z in round " << i << " located at ("
-                              << bufferC.read('Y').first << "," << bufferC.read('Z').second << ")\n";
+                             << bufferB.read('Y').first << "," << bufferB.read('Z').second << ")\n";
                     collision = true;
                 }
 
@@ -200,23 +199,24 @@ void detect_and_avoid_collisions () {
         }
         else {
             {
-                std::shared_lock<std::shared_mutex> lock(mtx1);
+                std::unique_lock<std::mutex> lock(mtx2);
                 proceed2.wait(lock, []{return checkBtoA;});
 
-                if (bufferD.read('X')==bufferD.read('Y')) {
+                if (bufferA.read('X')==bufferA.read('Y')) {
                     std::cout << "Collision detected with X and Y in round " << i << " located at ("
-                              << bufferD.read('X').first << "," << bufferD.read('X').second << ")\n";
+                              << bufferA.read('X').first << "," << bufferA.read('X').second << ")\n";
+                    collision = true;
                     collision = true;
                 }
 
-                if (bufferD.read('X')==bufferD.read('Z')) {
+                if (bufferA.read('X')==bufferA.read('Z')) {
                     std::cout << "Collision detected with X and Z in round " << i << " located at ("
-                              << bufferD.read('X').first << "," << bufferD.read('Z').second << ")\n";
+                              << bufferA.read('X').first << "," << bufferA.read('Z').second << ")\n";
                     collision = true;
                 }
-                if (bufferD.read('Y')==bufferD.read('Z')) {
+                if (bufferA.read('Y')==bufferA.read('Z')) {
                     std::cout << "Collision detected with Y and Z in round " << i << " located at ("
-                              << bufferD.read('Y').first << "," << bufferD.read('Z').second << ")\n";
+                             << bufferA.read('Y').first << "," << bufferA.read('Z').second << ")\n";
                     collision = true;
                 }
 
@@ -270,7 +270,7 @@ void detect_and_avoid_collisions () {
         }
         if (!collision)
             std::cout<<"No collision detected in round: "<<i<<"\n";
-        usleep(100);
+        usleep(10);
     }
 }
 
