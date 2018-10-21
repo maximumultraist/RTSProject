@@ -5,6 +5,7 @@
 #include <vector>
 #include <thread>
 #include <mutex>
+#include <cstdlib>
 #include <condition_variable>
 #include "BufferType1.h"
 #include "BufferType2.h"
@@ -16,8 +17,7 @@ BufferType2 bufferD;
 std::mutex mtx1,mtx2;
 std::condition_variable proceed1, proceed2;
 bool collision = false, readyAtoB = true, checkAtoB = false, checkBtoA = true, readyBtoA = false;
-bool lockX, lockY, lockZ;
-
+bool lockX, lockY, lockZ, xf = false, yf = false;
 void reset_locks()
 {
     lockX = false;
@@ -119,11 +119,11 @@ void generate_positions () {
             reset_locks();
 
         }
-        usleep(10);
+        //usleep(10);
     }
 }
 
-void detect_and_avoid_collisions () {
+void detect_and_avoid_collisions (int failx1, int failx2, int faily) {
     usleep(10);
     for (auto i = 1; i < 21; i++) {
         collision = false;
@@ -163,32 +163,107 @@ void detect_and_avoid_collisions () {
                     temp3.second = (temp3.second+1)%7;
                 }
 
-                if (temp1 == temp2) {
-                    lockX = true;
+                if (failx1 == i || failx2 == i || xf) {
+                    xf = true;
+                    std::cout << "X failed to stop, trying to manage fault!!" << std::endl;
+                    if (temp1==temp2) {
+                        lockY = true;
+                        if (temp1==temp3) {
+                            lockZ = true;
+                            std::cout << "Collision avoidance attempted in failure of X between X, Y, and Z in round " << i+2
+                                      << std::endl;
+                        }
+                        else
+                            std::cout << "Collision avoidance attempted in failure of X between X and Y in round " << i+2
+                                      << std::endl;
+                    }
+                    if (temp1==temp3) {
+                        lockY = true;
+                        if (temp2==temp3) {
+                            lockZ = true;
+                            std::cout << "Collision predicted and avoided between X, Y, and Z in round " << i+2
+                                      << std::endl;
+                        }
+                        else
+                            std::cout << "Collision predicted and avoided between X and Z in round " << i+2
+                                      << std::endl;
+                    }
+                    if (temp2==temp3) {
+                        lockZ = true;
+                        if (temp1==temp3) {
+                            lockY = true;
+                            std::cout << "Collision avoidance attempted in failure of X between X, Y, and Z in round " << i+2
+                                      << std::endl;
+                        }
+                        else
+                            std::cout << "Collision predicted and avoided between Y and Z in round " << i+2
+                                      << std::endl;
+                    }
+                }
+                if (faily == i || yf) {
+                    yf = true;
+                    std::cout << "Y failed to stop, trying to manage fault!!" << std::endl;
+                    if (temp1==temp2) {
+                        lockX = true;
+                        if (temp1==temp3) {
+                            lockZ = true;
+                            std::cout << "Collision avoidance attempted in failure of Y between X, Y, and Z in round " << i+2
+                                      << std::endl;
+                        }
+                        else
+                            std::cout << "Collision predicted and avoided between X and Y in round " << i+2
+                                      << std::endl;
+                    }
+                    if (temp1==temp3) {
+                        lockZ = true;
+                        if (temp2==temp3) {
+                            lockX = true;
+                            std::cout << "Collision avoidance attempted in failure of Y between X, Y, and Z in round " << i+2
+                                      << std::endl;
+                        }
+                        else
+                            std::cout << "Collision avoidance attempted in failure of Y between X and Z in round " << i+2
+                                      << std::endl;
+                    }
+                    if (temp2==temp3) {
+                        lockZ = true;
+                        if (temp1==temp3) {
+                            lockX = true;
+                            std::cout << "Collision predicted and avoided between X, Y, and Z in round " << i+2
+                                      << std::endl;
+                        }
+                        else
+                            std::cout << "Collision predicted and avoided between Y and Z in round " << i+2
+                                      << std::endl;
+                    }
+                } else {
+                    if (temp1 == temp2) {
+                        lockX = true;
+                        if (temp1 == temp3) {
+                            lockY = true;
+                            std::cout<<"Collision predicted and avoided between X, Y, and Z in round "<<i+2<<std::endl;
+                        }
+                        else
+                            std::cout << "Collision predicted and avoided between X and Y in round " << i+2 << std::endl;
+                    }
                     if (temp1 == temp3) {
                         lockY = true;
-                        std::cout<<"Collision predicted and avoided between X, Y, and Z in round "<<i+2<<std::endl;
+                        if (temp2 == temp3) {
+                            lockZ = true;
+                            std::cout<<"Collision predicted and avoided between X, Y, and Z in round "<<i+2<<std::endl;
+                        }
+                        else
+                            std::cout<<"Collision predicted and avoided between X and Z in round "<<i+2<<std::endl;
                     }
-                    else
-                        std::cout << "Collision predicted and avoided between X and Y in round " << i+2 << std::endl;
-                }
-                if (temp1 == temp3) {
-                    lockY = true;
                     if (temp2 == temp3) {
                         lockZ = true;
-                        std::cout<<"Collision predicted and avoided between X, Y, and Z in round "<<i+2<<std::endl;
+                        if (temp1 == temp3) {
+                            lockX = true;
+                            std::cout<<"Collision predicted and avoided between X, Y, and Z in round "<<i+2<<std::endl;
+                        }
+                        else
+                            std::cout<<"Collision predicted and avoided between Y and Z in round "<<i+2<<std::endl;
                     }
-                    else
-                        std::cout<<"Collision predicted and avoided between X and Z in round "<<i+2<<std::endl;
-                }
-                if (temp2 == temp3) {
-                    lockZ = true;
-                    if (temp1 == temp3) {
-                        lockX = true;
-                        std::cout<<"Collision predicted and avoided between X, Y, and Z in round "<<i+2<<std::endl;
-                    }
-                    else
-                        std::cout<<"Collision predicted and avoided between Y and Z in round "<<i+2<<std::endl;
                 }
 
                 checkAtoB = false;
@@ -233,33 +308,109 @@ void detect_and_avoid_collisions () {
                     temp3.second = (temp3.second+1)%7;
                 }
 
-                if (temp1 == temp2) {
-                    lockX = true;
+                if (failx1 == i || failx2 == i || xf) {
+                    xf = true;
+                    std::cout << "X failed to stop, trying to manage fault!!" << std::endl;
+                    if (temp1==temp2) {
+                        lockY = true;
+                        if (temp1==temp3) {
+                            lockZ = true;
+                            std::cout << "Collision avoidance attempted in failure of X between X, Y, and Z in round " << i+2
+                                      << std::endl;
+                        }
+                        else
+                            std::cout << "Collision avoidance attempted in failure of X between X and Y in round " << i+2
+                                      << std::endl;
+                    }
+                    if (temp1==temp3) {
+                        lockY = true;
+                        if (temp2==temp3) {
+                            lockZ = true;
+                            std::cout << "Collision predicted and avoided between X, Y, and Z in round " << i+2
+                                      << std::endl;
+                        }
+                        else
+                            std::cout << "Collision predicted and avoided between X and Z in round " << i+2
+                                      << std::endl;
+                    }
+                    if (temp2==temp3) {
+                        lockZ = true;
+                        if (temp1==temp3) {
+                            lockY = true;
+                            std::cout << "Collision avoidance attempted in failure of X between X, Y, and Z in round " << i+2
+                                      << std::endl;
+                        }
+                        else
+                            std::cout << "Collision predicted and avoided between Y and Z in round " << i+2
+                                      << std::endl;
+                    }
+                }
+                if (faily == i || yf) {
+                    yf = true;
+                    std::cout << "Y failed to stop, trying to manage fault!!" << std::endl;
+                    if (temp1==temp2) {
+                        lockX = true;
+                        if (temp1==temp3) {
+                            lockZ = true;
+                            std::cout << "Collision avoidance attempted in failure of Y between X, Y, and Z in round " << i+2
+                                      << std::endl;
+                        }
+                        else
+                            std::cout << "Collision predicted and avoided between X and Y in round " << i+2
+                                      << std::endl;
+                    }
+                    if (temp1==temp3) {
+                        lockZ = true;
+                        if (temp2==temp3) {
+                            lockX = true;
+                            std::cout << "Collision avoidance attempted in failure of Y between X, Y, and Z in round " << i+2
+                                      << std::endl;
+                        }
+                        else
+                            std::cout << "Collision avoidance attempted in failure of Y between X and Z in round " << i+2
+                                      << std::endl;
+                    }
+                    if (temp2==temp3) {
+                        lockZ = true;
+                        if (temp1==temp3) {
+                            lockX = true;
+                            std::cout << "Collision predicted and avoided between X, Y, and Z in round " << i+2
+                                      << std::endl;
+                        }
+                        else
+                            std::cout << "Collision predicted and avoided between Y and Z in round " << i+2
+                                      << std::endl;
+                    }
+                } else {
+                    if (temp1 == temp2) {
+                        lockX = true;
+                        if (temp1 == temp3) {
+                            lockY = true;
+                            std::cout<<"Collision predicted and avoided between X, Y, and Z in round "<<i+2<<std::endl;
+                        }
+                        else
+                            std::cout << "Collision predicted and avoided between X and Y in round " << i+2 << std::endl;
+                    }
                     if (temp1 == temp3) {
                         lockY = true;
-                        std::cout<<"Collision predicted and avoided between X, Y, and Z in round "<<i+2<<std::endl;
+                        if (temp2 == temp3) {
+                            lockZ = true;
+                            std::cout<<"Collision predicted and avoided between X, Y, and Z in round "<<i+2<<std::endl;
+                        }
+                        else
+                            std::cout<<"Collision predicted and avoided between X and Z in round "<<i+2<<std::endl;
                     }
-                    else
-                        std::cout << "Collision predicted and avoided between X and Y in round " << i+2 << std::endl;
-                }
-                if (temp1 == temp3) {
-                    lockY = true;
                     if (temp2 == temp3) {
                         lockZ = true;
-                        std::cout<<"Collision predicted and avoided between X, Y, and Z in round "<<i+2<<std::endl;
+                        if (temp1 == temp3) {
+                            lockX = true;
+                            std::cout<<"Collision predicted and avoided between X, Y, and Z in round "<<i+2<<std::endl;
+                        }
+                        else
+                            std::cout<<"Collision predicted and avoided between Y and Z in round "<<i+2<<std::endl;
                     }
-                    else
-                        std::cout<<"Collision predicted and avoided between X and Z in round "<<i+2<<std::endl;
                 }
-                if (temp2 == temp3) {
-                    lockZ = true;
-                    if (temp1 == temp3) {
-                        lockX = true;
-                        std::cout<<"Collision predicted and avoided between X, Y, and Z in round "<<i+2<<std::endl;
-                    }
-                    else
-                        std::cout<<"Collision predicted and avoided between Y and Z in round "<<i+2<<std::endl;
-                }
+
 
                 checkBtoA = false;
                 readyBtoA = true;
@@ -275,9 +426,16 @@ void detect_and_avoid_collisions () {
 }
 
 int main() {
+    FILE *random = fopen("/dev/urandom", "r");
+    auto seed = (unsigned int)getc(random);
+    srand(seed);
+    int failx1 = rand() % 20;
+    int failx2 = rand() % 20;
+    int faily = rand() % 20;
+
     reset_locks();
     std::thread p1 (generate_positions);
-    std::thread p3 (detect_and_avoid_collisions);
+    std::thread p3 (detect_and_avoid_collisions, failx1, failx2, faily);
     p1.join();
     p3.join();
 
