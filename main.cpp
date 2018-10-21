@@ -80,7 +80,6 @@ void generate_positions () {
             // bufferB.print();
             // printf("\n\n");
 
-            reset_failures();
             reset_locks();
         }
         else {
@@ -126,7 +125,6 @@ void generate_positions () {
             // bufferA.print();
             // printf("\n\n");
 
-            reset_failures();
             reset_locks();
 
         }
@@ -176,7 +174,9 @@ void detect_and_avoid_collisions () {
                 }
 
 
+
                 if(temp1 == temp2 && temp1 == temp3) { //Collision predicted between X, Y, and Z
+                    std::cout<<"Collision predicted between X, Y, and Z in round "<<i+2<<std::endl;
                     if ((rand() % 100) + 1 <= 50) { //failed stopping X
                         failX = true;
                     } else {
@@ -207,16 +207,22 @@ void detect_and_avoid_collisions () {
                         std::cout<< "failed stopping Y and Z, unavoidable collision will occur at round "<<i+2<<std::endl;
                     }
                 }
-                if (temp1 == temp2) { //Collision predicted between X and Y
+
+                else if (temp1 == temp2) { //Collision predicted between X and Y
+                    std::cout<<"Collision predicted between X and Y in round "<<i+2<<std::endl;
                     if((rand() % 100) + 1 <= 50){ //fail stopping X
+                        std::cout<<"Failed to stop X in round "<<i+2<<std::endl;
                         failX = true;
                     }else{
+                        std::cout<<"Successfully stopped X in round "<<i+2<<std::endl;
                         lockX = true;
                     }
                     if(failX){ // if stopping X failed, try to stop Y
                         if((rand() % 100) + 1 <= 30){
+                            std::cout<<"Failed to stop Y in round "<<i+2<<std::endl;
                             failY = true;
                         } else{
+                            std::cout<<"Successfully stopped Y in round "<<i+2<<std::endl;
                             lockY = true;
                         }
                     }
@@ -225,16 +231,21 @@ void detect_and_avoid_collisions () {
                     }
                 }
 
-                if (temp1 == temp3) { //Collision predicted between X and Z
+                else if (temp1 == temp3) { //Collision predicted between X and Z
+                    std::cout<<"Collision predicted between X and Z in round "<<i+2<<std::endl;
                     if((rand() % 100) + 1 <= 50){ //fail stopping X
+                        std::cout<<"Failed to stop X in round "<<i+2<<std::endl;
                         failX = true;
                     }else{
+                        std::cout<<"Successfully stopped X in round "<<i+2<<std::endl;
                         lockX = true;
                     }
                     if(failX){ // if stopping X failed, try to stop Z
                         if((rand() % 100) + 1 <= 10){
+                            std::cout<<"Failed to stop Z in round "<<i+2<<std::endl;
                             failZ = true;
                         } else{
+                            std::cout<<"Successfully stopped Z in round "<<i+2<<std::endl;
                             lockZ = true;
                         }
                     }
@@ -243,16 +254,21 @@ void detect_and_avoid_collisions () {
                     }
                 }
 
-                if (temp2 == temp3) { //Collision predicted between Y and Z
+                else if (temp2 == temp3) { //Collision predicted between Y and Z
+                    std::cout<<"Collision predicted between Y and Z in round "<<i+2<<std::endl;
                     if((rand() % 100) + 1 <= 30){ //fail stopping Y
+                        std::cout<<"Failed to stop Y in round "<<i+2<<std::endl;
                         failY = true;
                     }else{
+                        std::cout<<"Successfully stopped Y in round "<<i+2<<std::endl;
                         lockY = true;
                     }
                     if(failY){ // if stopping Y failed, try to stop Z
                         if((rand() % 100) + 1 <= 10){
+                            std::cout<<"Failed to stop Z in round "<<i+2<<std::endl;
                             failZ = true;
                         } else{
+                            std::cout<<"Successfully stopped Z in round "<<i+2<<std::endl;
                             lockZ = true;
                         }
                     }
@@ -260,7 +276,6 @@ void detect_and_avoid_collisions () {
                         std::cout<< "failed stopping Y and Z, unavoidable collision will occur at round "<<i+2<<std::endl;
                     }
                 }
-
                 /*
                 if (temp1 == temp2) {
                     lockX = true;
@@ -291,170 +306,185 @@ void detect_and_avoid_collisions () {
                 }
                  */
 
+                reset_failures();
                 checkAtoB = false;
                 readyAtoB = true;
                 lock.unlock();
                 proceed1.notify_all();
             }
-        }
-        else {
-            {
-                std::unique_lock<std::mutex> lock(mtx2);
-                proceed2.wait(lock, []{return checkBtoA;});
+        } else {
+            std::unique_lock<std::mutex> lock(mtx2);
+            proceed2.wait(lock, [] { return checkBtoA; });
 
-                if (bufferA.read('X')==bufferA.read('Y')) {
-                    std::cout << "Collision detected with X and Y in round " << i << " located at ("
-                              << bufferA.read('X').first << "," << bufferA.read('X').second << ")\n";
-                    collision = true;
-                    collision = true;
-                }
+            if (bufferA.read('X') == bufferA.read('Y')) {
+                std::cout << "Collision detected with X and Y in round " << i << " located at ("
+                          << bufferA.read('X').first << "," << bufferA.read('X').second << ")\n";
+                collision = true;
+                collision = true;
+            }
 
-                if (bufferA.read('X')==bufferA.read('Z')) {
-                    std::cout << "Collision detected with X and Z in round " << i << " located at ("
-                              << bufferA.read('X').first << "," << bufferA.read('Z').second << ")\n";
-                    collision = true;
-                }
-                if (bufferA.read('Y')==bufferA.read('Z')) {
-                    std::cout << "Collision detected with Y and Z in round " << i << " located at ("
-                             << bufferA.read('Y').first << "," << bufferA.read('Z').second << ")\n";
-                    collision = true;
-                }
+            if (bufferA.read('X') == bufferA.read('Z')) {
+                std::cout << "Collision detected with X and Z in round " << i << " located at ("
+                          << bufferA.read('X').first << "," << bufferA.read('Z').second << ")\n";
+                collision = true;
+            }
+            if (bufferA.read('Y') == bufferA.read('Z')) {
+                std::cout << "Collision detected with Y and Z in round " << i << " located at ("
+                          << bufferA.read('Y').first << "," << bufferA.read('Z').second << ")\n";
+                collision = true;
+            }
 
-                auto temp1 = bufferD.read('X');
-                auto temp2 = bufferD.read('Y');
-                auto temp3 = bufferD.read('Z');
+            auto temp1 = bufferD.read('X');
+            auto temp2 = bufferD.read('Y');
+            auto temp3 = bufferD.read('Z');
 
-                for (auto k = 0; k < 2; k++) {
-                    temp1.first = (temp1.first+1)%8;
-                    temp1.second = (temp1.second+1)%7;
-                    temp2.first = (temp2.first+1)%8;
-                    temp2.second = 2;
-                    temp3.first = 3;
-                    temp3.second = (temp3.second+1)%7;
-                }
+            for (auto k = 0; k < 2; k++) {
+                temp1.first = (temp1.first + 1) % 8;
+                temp1.second = (temp1.second + 1) % 7;
+                temp2.first = (temp2.first + 1) % 8;
+                temp2.second = 2;
+                temp3.first = 3;
+                temp3.second = (temp3.second + 1) % 7;
+            }
 
-                if(temp1 == temp2 && temp1 == temp3) { //Collision predicted between X, Y, and Z
-                    if ((rand() % 100) + 1 <= 50) { //failed stopping X
-                        failX = true;
-                    } else {
-                        lockX = true;
-                    }
-                    if ((rand() % 100) + 1 <= 30) { //failed stopping Y
-                        failY = true;
-                    } else {
-                        lockY = true;
-                    }
-                    if (failX || failY) { //if stopping X or Y failed, try to stop z
-                        if ((rand() % 100) + 1 <= 10) { //failed stopping Z
-                            failZ = true;
-                        } else {
-                            lockZ = true;
-                        }
-                    }
-                    if (failX && failY && failZ) { //if stopping X, Y, and Z all failed
-                        std::cout<< "failed stopping X, Y, and Z, unavoidable collision will occur at round "<<i+2<<std::endl;
-                    }
-                    else if(failX && failY){
-                        std::cout<< "failed stopping X and Y, unavoidable collision will occur at round "<<i+2<<std::endl;
-                    }
-                    else if(failX && failZ){
-                        std::cout<< "failed stopping X and Z, unavoidable collision will occur at round "<<i+2<<std::endl;
-                    }
-                    else if(failY && failZ){
-                        std::cout<< "failed stopping Y and Z, unavoidable collision will occur at round "<<i+2<<std::endl;
-                    }
-                }
-                if (temp1 == temp2) { //Collision predicted between X and Y
-                    if((rand() % 100) + 1 <= 50){ //fail stopping X
-                        failX = true;
-                    }else{
-                        lockX = true;
-                    }
-                    if(failX){ // if stopping X failed, try to stop Y
-                        if((rand() % 100) + 1 <= 30){
-                            failY = true;
-                        } else{
-                            lockY = true;
-                        }
-                    }
-                    if(failX && failY){ //if stopping both X and Y failed
-                        std::cout<< "failed stopping X and Y, unavoidable collision will occur at round "<<i+2<<std::endl;
-                    }
-                }
-
-                if (temp1 == temp3) { //Collision predicted between X and Z
-                    if((rand() % 100) + 1 <= 50){ //fail stopping X
-                        failX = true;
-                    }else{
-                        lockX = true;
-                    }
-                    if(failX){ // if stopping X failed, try to stop Z
-                        if((rand() % 100) + 1 <= 10){
-                            failZ = true;
-                        } else{
-                            lockZ = true;
-                        }
-                    }
-                    if(failX && failZ){ //if stopping both X and Z failed
-                        std::cout<< "failed stopping X and Z, unavoidable collision will occur at round "<<i+2<<std::endl;
-                    }
-                }
-
-                if (temp2 == temp3) { //Collision predicted between Y and Z
-                    if((rand() % 100) + 1 <= 30){ //fail stopping Y
-                        failY = true;
-                    }else{
-                        lockY = true;
-                    }
-                    if(failY){ // if stopping Y failed, try to stop Z
-                        if((rand() % 100) + 1 <= 10){
-                            failZ = true;
-                        } else{
-                            lockZ = true;
-                        }
-                    }
-                    if(failY && failZ){ //if stopping both Y and Z failed
-                        std::cout<< "failed stopping Y and Z, unavoidable collision will occur at round "<<i+2<<std::endl;
-                    }
-                }
-
-
-                /*
-                if (temp1 == temp2) {
+            if (temp1 == temp2 && temp1 == temp3) { //Collision predicted between X, Y, and Z
+                std::cout << "Collision predicted between X, Y, and Z in round " << i + 2 << std::endl;
+                if ((rand() % 100) + 1 <= 50) { //failed stopping X
+                    failX = true;
+                } else {
                     lockX = true;
-                    if (temp1 == temp3) {
-                        lockY = true;
-                        std::cout<<"Collision predicted and avoided between X, Y, and Z in round "<<i+2<<std::endl;
-                    }
-                    else
-                        std::cout << "Collision predicted and avoided between X and Y in round " << i+2 << std::endl;
                 }
+                if ((rand() % 100) + 1 <= 30) { //failed stopping Y
+                    failY = true;
+                } else {
+                    lockY = true;
+                }
+                if (failX || failY) { //if stopping X or Y failed, try to stop z
+                    if ((rand() % 100) + 1 <= 10) { //failed stopping Z
+                        failZ = true;
+                    } else {
+                        lockZ = true;
+                    }
+                }
+                if (failX && failY && failZ) { //if stopping X, Y, and Z all failed
+                    std::cout << "failed stopping X, Y, and Z, unavoidable collision will occur at round " << i + 2
+                              << std::endl;
+                } else if (failX && failY) {
+                    std::cout << "failed stopping X and Y, unavoidable collision will occur at round " << i + 2
+                              << std::endl;
+                } else if (failX && failZ) {
+                    std::cout << "failed stopping X and Z, unavoidable collision will occur at round " << i + 2
+                              << std::endl;
+                } else if (failY && failZ) {
+                    std::cout << "failed stopping Y and Z, unavoidable collision will occur at round " << i + 2
+                              << std::endl;
+                }
+            } else if (temp1 == temp2) { //Collision predicted between X and Y
+                std::cout << "Collision predicted between X and Y in round " << i + 2 << std::endl;
+                if ((rand() % 100) + 1 <= 50) { //fail stopping X
+                    std::cout << "Failed to stop X in round " << i + 2 << std::endl;
+                    failX = true;
+                } else {
+                    std::cout << "Successfully stopped X in round " << i + 2 << std::endl;
+                    lockX = true;
+                }
+                if (failX) { // if stopping X failed, try to stop Y
+                    if ((rand() % 100) + 1 <= 30) {
+                        std::cout << "Failed to stop Y in round " << i + 2 << std::endl;
+                        failY = true;
+                    } else {
+                        std::cout << "Successfully stopped Y in round " << i + 2 << std::endl;
+                        lockY = true;
+                    }
+                }
+                if (failX && failY) { //if stopping both X and Y failed
+                    std::cout << "failed stopping X and Y, unavoidable collision will occur at round " << i + 2
+                              << std::endl;
+                }
+            } else if (temp1 == temp3) { //Collision predicted between X and Z
+                std::cout << "Collision predicted between X and Z in round " << i + 2 << std::endl;
+                if ((rand() % 100) + 1 <= 50) { //fail stopping X
+                    std::cout << "Failed to stop X in round " << i + 2 << std::endl;
+                    failX = true;
+                } else {
+                    std::cout << "Successfully stopped X in round " << i + 2 << std::endl;
+                    lockX = true;
+                }
+                if (failX) { // if stopping X failed, try to stop Z
+                    if ((rand() % 100) + 1 <= 10) {
+                        std::cout << "Failed to stop Z in round " << i + 2 << std::endl;
+                        failZ = true;
+                    } else {
+                        std::cout << "Successfully stopped Z in round " << i + 2 << std::endl;
+                        lockZ = true;
+                    }
+                }
+                if (failX && failZ) { //if stopping both X and Z failed
+                    std::cout << "failed stopping X and Z, unavoidable collision will occur at round " << i + 2
+                              << std::endl;
+                }
+            } else if (temp2 == temp3) { //Collision predicted between Y and Z
+                std::cout << "Collision predicted between Y and Z in round " << i + 2 << std::endl;
+                if ((rand() % 100) + 1 <= 30) { //fail stopping Y
+                    std::cout << "Failed to stop Y in round " << i + 2 << std::endl;
+                    failY = true;
+                } else {
+                    std::cout << "Successfully stopped Y in round " << i + 2 << std::endl;
+                    lockY = true;
+                }
+                if (failY) { // if stopping Y failed, try to stop Z
+                    if ((rand() % 100) + 1 <= 10) {
+                        std::cout << "Failed to stop Z in round " << i + 2 << std::endl;
+                        failZ = true;
+                    } else {
+                        std::cout << "Successfully stopped Z in round " << i + 2 << std::endl;
+                        lockZ = true;
+                    }
+                }
+                if (failY && failZ) { //if stopping both Y and Z failed
+                    std::cout << "failed stopping Y and Z, unavoidable collision will occur at round " << i + 2
+                              << std::endl;
+                }
+            }
+
+
+            /*
+            if (temp1 == temp2) {
+                lockX = true;
                 if (temp1 == temp3) {
                     lockY = true;
-                    if (temp2 == temp3) {
-                        lockZ = true;
-                        std::cout<<"Collision predicted and avoided between X, Y, and Z in round "<<i+2<<std::endl;
-                    }
-                    else
-                        std::cout<<"Collision predicted and avoided between X and Z in round "<<i+2<<std::endl;
+                    std::cout<<"Collision predicted and avoided between X, Y, and Z in round "<<i+2<<std::endl;
                 }
+                else
+                    std::cout << "Collision predicted and avoided between X and Y in round " << i+2 << std::endl;
+            }
+            if (temp1 == temp3) {
+                lockY = true;
                 if (temp2 == temp3) {
                     lockZ = true;
-                    if (temp1 == temp3) {
-                        lockX = true;
-                        std::cout<<"Collision predicted and avoided between X, Y, and Z in round "<<i+2<<std::endl;
-                    }
-                    else
-                        std::cout<<"Collision predicted and avoided between Y and Z in round "<<i+2<<std::endl;
+                    std::cout<<"Collision predicted and avoided between X, Y, and Z in round "<<i+2<<std::endl;
                 }
-                 */
-
-                checkBtoA = false;
-                readyBtoA = true;
-                lock.unlock();
-                proceed2.notify_all();
-
+                else
+                    std::cout<<"Collision predicted and avoided between X and Z in round "<<i+2<<std::endl;
             }
+            if (temp2 == temp3) {
+                lockZ = true;
+                if (temp1 == temp3) {
+                    lockX = true;
+                    std::cout<<"Collision predicted and avoided between X, Y, and Z in round "<<i+2<<std::endl;
+                }
+                else
+                    std::cout<<"Collision predicted and avoided between Y and Z in round "<<i+2<<std::endl;
+            }
+             */
+
+            reset_failures();
+            checkBtoA = false;
+            readyBtoA = true;
+            lock.unlock();
+            proceed2.notify_all();
+
+
         }
         if (!collision)
             std::cout<<"No collision detected in round: "<<i<<"\n";
